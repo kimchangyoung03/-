@@ -1,6 +1,6 @@
 import React from 'react';
 import { Product, PricingDisplayMode } from '../types';
-import { Star, ShoppingCart, Heart } from 'lucide-react';
+import { ShoppingCart, Heart } from 'lucide-react';
 
 interface ProductCardProps {
   product: Product;
@@ -9,32 +9,23 @@ interface ProductCardProps {
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ product, mode, index }) => {
-  // Use Pollinations.ai to generate a specific image based on the description
-  // We add 'nologo=true' to keep it clean
-  // We add a seed based on product ID to ensure consistency across re-renders but unique per product
-  const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(product.imageKeyword)}?width=400&height=400&nologo=true&seed=${product.id}&model=flux`;
-
-  const displayOriginal = product.originalPrice.toLocaleString(); 
+  const displayOriginal = product.originalPrice.toLocaleString();
   const displayFinal = product.discountedPrice.toLocaleString();
 
   return (
     <div className="flex flex-col bg-white rounded-lg overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-shadow duration-200">
       {/* Image Container */}
       <div className="relative aspect-square bg-gray-100 overflow-hidden group">
-        <img 
-          src={imageUrl} 
-          alt={product.name} 
+        <img
+          src={product.imagePath}
+          alt={product.name}
           className="w-full h-full object-cover object-center hover:scale-105 transition-transform duration-500"
           loading="lazy"
-          onError={(e) => {
-            // Fallback if generation fails
-            (e.target as HTMLImageElement).src = `https://picsum.photos/seed/${product.id}/400/400`;
-          }}
         />
         <button className="absolute top-2 right-2 p-1.5 bg-white/80 backdrop-blur-sm rounded-full text-gray-600 hover:text-red-500 transition-colors">
           <Heart size={18} />
         </button>
-        
+
         {/* Badge for high rating or high discount */}
         {(product.rating >= 4.5 || product.discountPercentage >= 50) && (
           <div className={`absolute top-2 left-2 px-2 py-0.5 text-white text-[10px] font-bold rounded-sm ${product.discountPercentage >= 50 ? 'bg-red-500' : 'bg-black/70'}`}>
@@ -49,18 +40,13 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, mode, index }) => {
         <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wider mb-1 truncate hidden">
           {product.imageKeyword}
         </span>
-        
+
         {/* Title */}
         <h3 className="text-sm font-medium text-gray-800 line-clamp-2 leading-tight mb-2 min-h-[2.5em]">
           {product.name}
         </h3>
 
-        {/* Rating Row */}
-        <div className="flex items-center mb-3">
-          <Star size={12} className="text-yellow-400 fill-yellow-400 mr-1" />
-          <span className="text-xs font-bold text-gray-700">{product.rating}</span>
-          <span className="text-xs text-gray-400 ml-1">({product.reviewCount})</span>
-        </div>
+
 
         {/* Pricing Section - The Core Logic */}
         <div className="mt-auto">
@@ -71,7 +57,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, mode, index }) => {
             // Final: Black
             <div className="flex flex-col items-start">
               <div className="flex items-baseline gap-1.5 w-full">
-                 <span className="text-2xl font-extrabold text-red-600 leading-none">
+                <span className="text-2xl font-extrabold text-red-600 leading-none">
                   {product.discountPercentage}%
                 </span>
                 <span className="text-xs text-gray-400 line-through decoration-gray-400">
