@@ -1,0 +1,5 @@
+{
+  "name": "Dynamic Pricing PLP Generator",
+  "description": "A mobile-first Product Listing Page (PLP) generator that creates realistic product data based on a category using Gemini. It features an A/B testing toggle to switch between a 'Discount-First' and a 'Price-First' visual hierarchy for pricing display.",
+  "requestFramePermissions": []
+}
