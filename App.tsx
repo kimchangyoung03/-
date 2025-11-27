@@ -6,6 +6,7 @@ import PostSurvey from './components/PostSurvey';
 import { Product, PricingDisplayMode, ProductRange } from './types';
 import { Settings2, ShoppingBag, LogOut } from 'lucide-react';
 import productsData from './data.json';
+import { supabase } from './lib/supabase';
 
 interface SurveyData {
   name: string;
@@ -146,6 +147,82 @@ const App: React.FC = () => {
     }
   };
 
+  // Save data to database
+  const saveToDatabase = async (preference?: '빵' | '과일') => {
+    const finalPreference = preference || postSurveyData;
+    
+    // Supabase가 설정되지 않은 경우 (로컬 개발 시)
+    const supabaseUrl = (import.meta as any).env?.VITE_SUPABASE_URL;
+    const supabaseKey = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY;
+    
+    console.log('Attempting to save data...');
+    console.log('Supabase URL:', supabaseUrl ? 'Set' : 'Not set');
+    console.log('Supabase Key:', supabaseKey ? 'Set' : 'Not set');
+    
+    if (!supabase || !supabaseUrl || !supabaseKey) {
+      console.log('Supabase not configured, skipping database save');
+      console.log('supabase:', supabase);
+      return;
+    }
+
+    const experimentData = {
+      // 초기 설문조사
+      name: surveyData?.name || null,
+      age: surveyData?.age || null,
+      gender: surveyData?.gender || null,
+      gift_budget: surveyData?.giftBudget || null,
+      
+      // 첫 번째 세션
+      first_button: firstSession?.button || null,
+      first_display_mode: firstSession?.mode || null,
+      first_range: firstSession?.range || null,
+      first_duration: firstSession?.duration || null,
+      first_clicks: firstSession?.clicks || null,
+      first_max_scroll: firstSession?.maxScroll || null,
+      first_start_time: firstSession?.startTime ? new Date(firstSession.startTime).toISOString() : null,
+      first_end_time: firstSession?.endTime ? new Date(firstSession.endTime).toISOString() : null,
+      first_product_id: firstSession?.product?.id || null,
+      first_product_name: firstSession?.product?.name || null,
+      first_product_price: firstSession?.product?.discountedPrice || null,
+      
+      // 두 번째 세션
+      second_button: secondSession?.button || null,
+      second_display_mode: secondSession?.mode || null,
+      second_range: secondSession?.range || null,
+      second_duration: secondSession?.duration || null,
+      second_clicks: secondSession?.clicks || null,
+      second_max_scroll: secondSession?.maxScroll || null,
+      second_start_time: secondSession?.startTime ? new Date(secondSession.startTime).toISOString() : null,
+      second_end_time: secondSession?.endTime ? new Date(secondSession.endTime).toISOString() : null,
+      second_product_id: secondSession?.product?.id || null,
+      second_product_name: secondSession?.product?.name || null,
+      second_product_price: secondSession?.product?.discountedPrice || null,
+      
+      // 사후 설문조사
+      website_preference: finalPreference || null,
+    };
+
+    try {
+      console.log('Saving experiment data:', experimentData);
+      const { data, error } = await supabase
+        .from('experiments')
+        .insert([experimentData])
+        .select();
+
+      if (error) {
+        console.error('❌ Error saving to database:', error);
+        console.error('Error details:', JSON.stringify(error, null, 2));
+        alert(`데이터 저장 중 오류가 발생했습니다: ${error.message}`);
+      } else {
+        console.log('✅ Data saved successfully:', data);
+        alert('데이터가 성공적으로 저장되었습니다!');
+      }
+    } catch (err) {
+      console.error('❌ Unexpected error:', err);
+      alert(`데이터 저장 중 오류가 발생했습니다: ${err}`);
+    }
+  };
+
   // Handle post survey submission
   const handlePostSurveySubmit = (preference: '빵' | '과일') => {
     setPostSurveyData(preference);
@@ -153,8 +230,12 @@ const App: React.FC = () => {
   };
 
   // Download final report
-  const downloadReport = (preference?: '빵' | '과일') => {
+  const downloadReport = async (preference?: '빵' | '과일') => {
     const finalPreference = preference || postSurveyData;
+    
+    // 데이터베이스에 저장
+    await saveToDatabase(preference);
+    
     let report = `Experiment Report
 ==================
 Date: ${new Date().toLocaleString()}
@@ -233,7 +314,7 @@ Total Duration: ${firstSession && secondSession ? (firstSession.duration + secon
 Total Clicks: ${firstSession && secondSession ? (firstSession.clicks + secondSession.clicks) : 'N/A'}
 `;
 
-    // Create and download file
+    // Create and download file (로컬 백업용)
     const blob = new Blob([report], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
