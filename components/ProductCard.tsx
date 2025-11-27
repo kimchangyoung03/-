@@ -6,14 +6,18 @@ interface ProductCardProps {
   product: Product;
   mode: PricingDisplayMode;
   index: number;
+  onClick?: () => void;
 }
 
-const ProductCard: React.FC<ProductCardProps> = ({ product, mode, index }) => {
+const ProductCard: React.FC<ProductCardProps> = ({ product, mode, index, onClick }) => {
   const displayOriginal = product.originalPrice.toLocaleString();
   const displayFinal = product.discountedPrice.toLocaleString();
 
   return (
-    <div className="flex flex-col bg-white rounded-lg overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-shadow duration-200">
+    <div 
+      className="flex flex-col bg-white rounded-lg overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-shadow duration-200 cursor-pointer"
+      onClick={onClick}
+    >
       {/* Image Container */}
       <div className="relative aspect-square bg-gray-100 overflow-hidden group">
         <img
