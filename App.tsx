@@ -245,100 +245,10 @@ const App: React.FC = () => {
     downloadReport(preference);
   };
 
-  // Download final report
+  // Save data to database only (no file download)
   const downloadReport = async (preference?: '빵' | '과일') => {
-    const finalPreference = preference || postSurveyData;
-    
-    // 데이터베이스 저장 기능 제거됨
-    
-    let report = `Experiment Report
-==================
-Date: ${new Date().toLocaleString()}
-
-=== Initial Survey Data ===
-Name: ${surveyData?.name || 'N/A'}
-Age: ${surveyData?.age || 'N/A'}
-Gender: ${surveyData?.gender || 'N/A'}
-Gift Budget: ${surveyData?.giftBudget || 'N/A'}
-
-=== First Session ===
-`;
-
-    if (firstSession) {
-      report += `Button: ${firstSession.button}
-Display Mode: ${firstSession.mode}
-Product Range: ${firstSession.range}
-Duration: ${firstSession.duration.toFixed(2)} seconds
-Total Clicks: ${firstSession.clicks}
-Max Scroll Depth: ${firstSession.maxScroll} pixels
-Start Time: ${new Date(firstSession.startTime).toLocaleString()}
-End Time: ${new Date(firstSession.endTime).toLocaleString()}
-`;
-
-      if (firstSession.product) {
-        report += `
-Selected Product:
-  - Product ID: ${firstSession.product.id}
-  - Product Name: ${firstSession.product.name}
-  - Original Price: ₩${firstSession.product.originalPrice.toLocaleString()}
-  - Discounted Price: ₩${firstSession.product.discountedPrice.toLocaleString()}
-  - Discount Percentage: ${firstSession.product.discountPercentage}%
-  - Rating: ${firstSession.product.rating}
-  - Review Count: ${firstSession.product.reviewCount}
-  - Image Keyword: ${firstSession.product.imageKeyword}
-`;
-      }
-    }
-
-    report += `
-=== Second Session ===
-`;
-
-    if (secondSession) {
-      report += `Button: ${secondSession.button}
-Display Mode: ${secondSession.mode}
-Product Range: ${secondSession.range}
-Duration: ${secondSession.duration.toFixed(2)} seconds
-Total Clicks: ${secondSession.clicks}
-Max Scroll Depth: ${secondSession.maxScroll} pixels
-Start Time: ${new Date(secondSession.startTime).toLocaleString()}
-End Time: ${new Date(secondSession.endTime).toLocaleString()}
-`;
-
-      if (secondSession.product) {
-        report += `
-Selected Product:
-  - Product ID: ${secondSession.product.id}
-  - Product Name: ${secondSession.product.name}
-  - Original Price: ₩${secondSession.product.originalPrice.toLocaleString()}
-  - Discounted Price: ₩${secondSession.product.discountedPrice.toLocaleString()}
-  - Discount Percentage: ${secondSession.product.discountPercentage}%
-  - Rating: ${secondSession.product.rating}
-  - Review Count: ${secondSession.product.reviewCount}
-  - Image Keyword: ${secondSession.product.imageKeyword}
-`;
-      }
-    }
-
-    report += `
-=== Post Survey ===
-Website Preference: ${finalPreference || 'N/A'}
-
-=== Summary ===
-Total Duration: ${firstSession && secondSession ? (firstSession.duration + secondSession.duration).toFixed(2) : 'N/A'} seconds
-Total Clicks: ${firstSession && secondSession ? (firstSession.clicks + secondSession.clicks) : 'N/A'}
-`;
-
-    // Create and download file (로컬 백업용)
-    const blob = new Blob([report], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `experiment_report_${Date.now()}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    // 데이터베이스에 저장
+    await saveToDatabase(preference);
 
     // Reset everything
     setCurrentPage('survey');
