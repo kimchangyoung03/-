@@ -249,8 +249,7 @@ const App: React.FC = () => {
   const downloadReport = async (preference?: '빵' | '과일') => {
     const finalPreference = preference || postSurveyData;
     
-    // 데이터베이스에 저장
-    await saveToDatabase(preference);
+    // 데이터베이스 저장 기능 제거됨
     
     let report = `Experiment Report
 ==================
