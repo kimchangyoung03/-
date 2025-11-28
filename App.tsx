@@ -3,6 +3,7 @@ import ProductCard from './components/ProductCard';
 import LandingPage from './components/LandingPage';
 import Survey from './components/Survey';
 import PostSurvey from './components/PostSurvey';
+import ProductConfirmDialog from './components/ProductConfirmDialog';
 import { Product, PricingDisplayMode, ProductRange } from './types';
 import { Settings2, ShoppingBag, LogOut } from 'lucide-react';
 import productsData from './data.json';
@@ -34,6 +35,7 @@ const App: React.FC = () => {
   const [displayMode, setDisplayMode] = useState<PricingDisplayMode>(PricingDisplayMode.DISCOUNT_EMPHASIS);
   const [currentRange, setCurrentRange] = useState<ProductRange>(ProductRange.RANGE_1_50);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [productToConfirm, setProductToConfirm] = useState<Product | null>(null);
   const [surveyData, setSurveyData] = useState<SurveyData | null>(null);
   const [postSurveyData, setPostSurveyData] = useState<'빵' | '과일' | null>(null);
   
@@ -115,8 +117,15 @@ const App: React.FC = () => {
     window.scrollTo(0, 0);
   };
 
-  // Handle Product Click
+  // Handle Product Click - Show confirmation dialog
   const handleProductClick = (product: Product) => {
+    setProductToConfirm(product);
+  };
+
+  // Handle Product Confirmation - Process the selection
+  const handleProductConfirm = () => {
+    if (!productToConfirm) return;
+
     const endTime = Date.now();
     const duration = (endTime - startTimeRef.current) / 1000;
     
@@ -124,13 +133,15 @@ const App: React.FC = () => {
       button: currentButton,
       mode: displayMode,
       range: currentRange,
-      product: product,
+      product: productToConfirm,
       duration: duration,
       clicks: clickCountRef.current,
       maxScroll: maxScrollRef.current,
       startTime: startTimeRef.current,
       endTime: endTime
     };
+
+    setProductToConfirm(null);
 
     if (isFirstSession) {
       setFirstSession(sessionData);
@@ -145,6 +156,11 @@ const App: React.FC = () => {
       // Move to post survey
       setCurrentPage('postSurvey');
     }
+  };
+
+  // Handle Product Cancel - Close dialog and stay on current page
+  const handleProductCancel = () => {
+    setProductToConfirm(null);
   };
 
   // Save data to database
@@ -373,45 +389,56 @@ Total Clicks: ${firstSession && secondSession ? (firstSession.clicks + secondSes
   }
 
   return (
-    <div className="min-h-screen pb-20 max-w-md mx-auto bg-white shadow-2xl overflow-hidden relative">
-      {/* Navigation Header */}
-      <header className="flex items-center justify-between px-4 py-3 bg-white sticky top-0 z-10 border-b border-gray-100">
-        <div className="flex items-center gap-2 text-black font-bold text-lg">
-          <ShoppingBag className="text-red-600" />
-          <span>SHOP AI</span>
-        </div>
-      </header>
+    <>
+      <div className="min-h-screen pb-20 max-w-md mx-auto bg-white shadow-2xl overflow-hidden relative">
+        {/* Navigation Header */}
+        <header className="flex items-center justify-between px-4 py-3 bg-white sticky top-0 z-10 border-b border-gray-100">
+          <div className="flex items-center gap-2 text-black font-bold text-lg">
+            <ShoppingBag className="text-red-600" />
+            <span>SHOP AI</span>
+          </div>
+        </header>
 
-      {/* View Mode Indicator */}
-      <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
-        <div className="flex flex-col">
-          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Current View</span>
-          <span className="text-sm font-bold text-gray-900">
-            {displayMode === PricingDisplayMode.DISCOUNT_EMPHASIS ? '할인율 강조 (Discount Focus)' : '최종가 강조 (Price Focus)'}
-          </span>
+        {/* View Mode Indicator */}
+        <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
+          <div className="flex flex-col">
+            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Current View</span>
+            <span className="text-sm font-bold text-gray-900">
+              {displayMode === PricingDisplayMode.DISCOUNT_EMPHASIS ? '할인율 강조 (Discount Focus)' : '최종가 강조 (Price Focus)'}
+            </span>
+          </div>
+          <div className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-lg shadow-sm opacity-75 cursor-not-allowed">
+            <Settings2 size={16} className="text-gray-400" />
+            <span className="text-xs font-medium text-gray-400">Fixed Mode</span>
+          </div>
         </div>
-        <div className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-lg shadow-sm opacity-75 cursor-not-allowed">
-          <Settings2 size={16} className="text-gray-400" />
-          <span className="text-xs font-medium text-gray-400">Fixed Mode</span>
-        </div>
+
+        {/* Main Content Area */}
+        <main className="px-3 py-4">
+          {/* Product Grid */}
+          <div className="grid grid-cols-2 gap-3">
+            {products.map((product, index) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                mode={displayMode}
+                index={index}
+                onClick={() => handleProductClick(product)}
+              />
+            ))}
+          </div>
+        </main>
       </div>
 
-      {/* Main Content Area */}
-      <main className="px-3 py-4">
-        {/* Product Grid */}
-        <div className="grid grid-cols-2 gap-3">
-          {products.map((product, index) => (
-            <ProductCard
-              key={product.id}
-              product={product}
-              mode={displayMode}
-              index={index}
-              onClick={() => handleProductClick(product)}
-            />
-          ))}
-        </div>
-      </main>
-    </div>
+      {/* Product Confirmation Dialog */}
+      {productToConfirm && (
+        <ProductConfirmDialog
+          product={productToConfirm}
+          onConfirm={handleProductConfirm}
+          onCancel={handleProductCancel}
+        />
+      )}
+    </>
   );
 };
 
